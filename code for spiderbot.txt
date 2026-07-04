@@ -21,27 +21,25 @@
     A5 = SCL (PCA9685)
     D9 = HC-SR04 Trig
     D10= HC-SR04 Echo
- ============================================================
-*/
+ 
 
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
-// ---- SG90 pulse width (us) ----
 #define SERVO_MIN   150    // ~0°
 #define SERVO_MAX   600    // ~180°
 #define SERVO_MID   375    // ~90°
 
-// ---- HC-SR04 pins ----
+
 #define TRIG_PIN    9
 #define ECHO_PIN    10
 
-// ---- obstacle distance threshold (cm) ----
+
 #define OBSTACLE_CM 20
 
-// ---- gait timing (ms) — increase for slower movement ----
+
 #define STEP_DELAY  60     // delay between each sub-step
 #define PAUSE       120    // pause at end of each full step
 
@@ -55,23 +53,14 @@ int neutralAngle[8] = {90, 90, 90, 90, 90, 90, 90, 90};
 // Foot lift angle (up) and push angle (down)
 #define FOOT_LIFT       35
 #define FOOT_PUSH       20
-
-// ============================================================
-//  HELPERS
-// ============================================================
-
 // Convert angle (0-180) to PCA9685 pulse tick
 uint16_t angleToPulse(int angle) {
   return map(angle, 0, 180, SERVO_MIN, SERVO_MAX);
 }
-
-// Set one servo channel to a given angle
 void setServo(uint8_t channel, int angle) {
   angle = constrain(angle, 0, 180);
   pwm.setPWM(channel, 0, angleToPulse(angle));
 }
-
-// Move a servo channel smoothly from current→target in small steps
 void smoothMove(uint8_t channel, int fromAngle, int toAngle, int stepDelay) {
   int step = (toAngle > fromAngle) ? 1 : -1;
   for (int a = fromAngle; a != toAngle; a += step) {
@@ -80,15 +69,11 @@ void smoothMove(uint8_t channel, int fromAngle, int toAngle, int stepDelay) {
   }
   setServo(channel, toAngle);
 }
-
-// Stand all legs at neutral position
 void standStill() {
   for (uint8_t ch = 0; ch < 8; ch++) {
     setServo(ch, neutralAngle[ch]);
   }
 }
-
-// Measure distance with HC-SR04 (returns cm)
 long getDistance() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -178,10 +163,7 @@ void walkForward() {
   stepGroup(legB, legBswingDir);
   delay(PAUSE);
 }
-
-// ============================================================
 //  TURN — swing both legs on one side forward, other backward
-// ============================================================
 void turnRight(int steps) {
   // Right turn: FL+RL swing forward, FR+RR swing backward
   const uint8_t right[2][2] = {{0,1},{4,5}}; // FL, RL
@@ -206,10 +188,6 @@ void turnLeft(int steps) {
     delay(PAUSE);
   }
 }
-
-// ============================================================
-//  SETUP & LOOP
-// ============================================================
 void setup() {
   Serial.begin(9600);
   Serial.println("Spider Robot Starting...");
@@ -241,6 +219,6 @@ void loop() {
     Serial.println("Obstacle! Turning...");
     standStill();
     delay(300);
-    turnRight(3);  // turn right 3 gait-steps
+    turnRight(3);  
   }
 }
